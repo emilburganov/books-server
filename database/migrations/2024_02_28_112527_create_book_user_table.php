@@ -17,7 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Book::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-            $table->decimal("rating")->default(0);
+            $table->decimal("rating", 3)->default(0);
+            $table->boolean("is_selected")->default(false);
             $table->timestamps();
         });
     }

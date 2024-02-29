@@ -24,13 +24,23 @@ class AuthController extends Controller
 
         $token = Str::uuid();
 
-        Auth::user()->update([
+        $user = User::query()
+            ->where("login", $request->login)
+            ->where("password", $request->password)
+            ->first();
+
+        if (!$user) {
+            return $this->baseError("Authentication error", 401);
+        }
+
+        $user->update([
             'token' => $token,
         ]);
 
         return response()->json([
             'data' => [
                 'token' => $token,
+                'is_admin' => $user->is_admin,
             ],
         ]);
     }
@@ -48,16 +58,8 @@ class AuthController extends Controller
 
         $user = User::query()->create($request->only(['login', 'password']));
 
-        $token = Str::uuid();
-
-        $user->update([
-            'token' => $token,
-        ]);
-
         return response()->json([
-            'data' => [
-                'token' => $token,
-            ],
+            'data' => $user,
         ]);
     }
 

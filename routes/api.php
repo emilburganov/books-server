@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\GenreController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,8 +31,20 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::middleware('auth.token')->group(function () {
     Route::get('/logout', [AuthController::class, 'logout']);
 
+    Route::get('/books/selected', [BookController::class, 'getSelected']);
+    Route::patch('/books/unselect/all', [BookController::class, 'unselectAll']);
+
     // Admin routes
     Route::middleware('admin')->group(function () {
-
+        Route::apiResource('genres', GenreController::class);
+        Route::apiResource('authors', AuthorController::class);
+        Route::apiResource('books', BookController::class)->except('index', 'show');
+        Route::apiResource('users', UserController::class);
     });
+
+    Route::get('/books', [BookController::class, 'index']);
+    Route::get('/books/{book}', [BookController::class, 'show']);
+    Route::patch('/books/{book}/select', [BookController::class, 'select']);
+    Route::patch('/books/{book}/unselect', [BookController::class, 'unselect']);
+    Route::patch('/books/{book}/rate', [BookController::class, 'rate']);
 });

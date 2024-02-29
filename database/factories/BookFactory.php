@@ -18,7 +18,7 @@ class BookFactory extends Factory
     {
         return [
             'title' => fake()->title(),
-            'description' => fake()->text(),
+            'description' => fake()->text(40),
             'image' => '5.jpg',
         ];
     }

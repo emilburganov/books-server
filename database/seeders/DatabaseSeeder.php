@@ -19,6 +19,12 @@ class DatabaseSeeder extends Seeder
 
         User::factory(10)->create();
 
+        User::query()->create([
+            'login' => 'admin',
+            'password' => 'admin',
+            'is_admin' => true,
+        ]);
+
         $genres = ['Фантастика', 'Комедия', 'Советы от гуру', 'Фэнтези', 'История'];
         foreach ($genres as $genre) {
             Genre::query()->create([
