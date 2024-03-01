@@ -12,7 +12,10 @@ use Illuminate\Support\Str;
 
 class BookController extends Controller
 {
-    public function getSelected()
+    /**
+     * @return JsonResponse
+     */
+    public function getSelected(): JsonResponse
     {
         $books = Auth::user()->books()
             ->where('is_selected', true)
@@ -26,6 +29,10 @@ class BookController extends Controller
         ]);
     }
 
+    /**
+     * @param Book $book
+     * @return JsonResponse
+     */
     public function select(Book $book): JsonResponse
     {
         $user = Auth::user();
@@ -47,6 +54,10 @@ class BookController extends Controller
         ]);
     }
 
+    /**
+     * @param Book $book
+     * @return JsonResponse
+     */
     public function unselect(Book $book): JsonResponse
     {
         $user = Auth::user();
@@ -68,10 +79,13 @@ class BookController extends Controller
         ]);
     }
 
+    /**
+     * @return JsonResponse
+     */
     public function unselectAll(): JsonResponse
     {
         $user = Auth::user();
-        $userBook = $user->books()->update([
+        $user->books()->update([
             'is_selected' => false
         ]);
 
@@ -82,6 +96,11 @@ class BookController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param Book $book
+     * @return JsonResponse
+     */
     public function rate(Request $request, Book $book): JsonResponse
     {
         $v = Validator::make($request->all(), [
@@ -115,9 +134,46 @@ class BookController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $books = Book::query()->with('authors')->with('genres')->with('users')->get();
+        $books = Book::query()->with('genres')->with('authors')->with('users');
+
+        if (isset($request->authors)) {
+            $books->whereHas('authors', function ($q) use ($request) {
+                return $q->whereIn('author_id', $request->authors);
+            });
+        }
+
+        if (isset($request->genres)) {
+            $books->whereHas('genres', function ($q) use ($request) {
+                return $q->whereIn('genre_id', $request->genres);
+            });
+        }
+
+        if (isset($request->sorting)) {
+            if ($request->sorting === 'date_desk') {
+                $books->orderBy('created_at', 'desc');
+                $books = $books->get();
+            }
+
+            if ($request->sorting === 'date_asc') {
+                $books->orderBy('created_at', 'asc');
+                $books = $books->get();
+            }
+
+            if ($request->sorting === 'rating_desk') {
+                $books = $books->get();
+                $books = $books->sortByDesc('rating')->values();
+            }
+
+            if ($request->sorting === 'rating_asc') {
+                $books = $books->get();
+                $books = $books->sortBy('rating')->values();
+            }
+        } else {
+            $books = $books->get();
+        }
+
 
         return response()->json([
             'data' => $books,
@@ -198,7 +254,7 @@ class BookController extends Controller
 
         $image = $request->file('image');
         $imageName = Str::uuid() . '.' . $image->extension();
-        $image->move('/images', $imageName);
+        $image->move('images', $imageName);
 
         $book->update(['image' => $imageName]);
 

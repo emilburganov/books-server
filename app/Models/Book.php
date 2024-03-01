@@ -34,7 +34,7 @@ class Book extends Model
             ? round($this->users()
                 ->where('rating', '!=', 0)
                 ->avg('rating'), 2)
-            : "Нет оценки";
+            : 0;
     }
 
     public function getIsSelectedAttribute(): bool
