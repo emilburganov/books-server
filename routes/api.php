@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
+
 // Auth guarded routes
 Route::middleware('auth.token')->group(function () {
     Route::get('/logout', [AuthController::class, 'logout']);
@@ -36,15 +37,21 @@ Route::middleware('auth.token')->group(function () {
 
     // Admin routes
     Route::middleware('admin')->group(function () {
-        Route::apiResource('genres', GenreController::class);
-        Route::apiResource('authors', AuthorController::class);
+        Route::apiResource('genres', GenreController::class)->except('index');
+        Route::apiResource('authors', AuthorController::class)->except('index');
         Route::apiResource('books', BookController::class)->except('index', 'show');
-        Route::apiResource('users', UserController::class);
+        Route::apiResource('users', UserController::class)->except('index');
     });
 
-    Route::get('/books', [BookController::class, 'index']);
-    Route::get('/books/{book}', [BookController::class, 'show']);
     Route::patch('/books/{book}/select', [BookController::class, 'select']);
     Route::patch('/books/{book}/unselect', [BookController::class, 'unselect']);
     Route::patch('/books/{book}/rate', [BookController::class, 'rate']);
 });
+
+
+Route::get('/books/popular', [BookController::class, 'getPopular']);
+Route::get('/books', [BookController::class, 'index']);
+Route::get('/authors', [AuthorController::class, 'index']);
+Route::get('/genres', [GenreController::class, 'index']);
+Route::get('/users', [UserController::class, 'index']);
+Route::get('/books/{book}', [BookController::class, 'show']);

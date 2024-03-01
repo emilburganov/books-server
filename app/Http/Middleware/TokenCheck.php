@@ -28,6 +28,7 @@ class TokenCheck
         }
 
         Auth::login($user);
+        Auth::setUser($user);
 
         return $next($request);
     }

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -47,10 +48,25 @@ class AuthController extends Controller
 
     public function register(Request $request): JsonResponse
     {
+//        Первая маленькая, две больших, два спецсимвола, латиница
+//        /^(?=.*[A-Z].*[A-Z])(?=.*[!@#$%^&*].*[!@#$%^&*]).*[a-z].*$/i
         $v = Validator::make($request->all(), [
             'login' => 'required|string|regex:/^[A-Z]+$/i',
-            'password' => 'required|string|min:6|regex:/^[A-Z]+$/i|confirmed',
-        ]);
+            'password' => [
+                'required',
+                'string',
+                'min:6',
+                'regex:/^(.*[!@#$%^&*].*)(.*[A-Za-z].*){0,}$/iu',
+                'confirmed',
+            ]]);
+
+
+        foreach (str_split($request->password) as $char) {
+            if (!preg_match('/[A-Za-z]/u', $char) && !preg_match('/[!@#$%^&*]/iu', $char)) {
+                $v->errors()->add('password', 'The password field format is invalid.');
+                return $this->validationError($v->errors());
+            }
+        }
 
         if ($v->fails()) {
             return $this->validationError($v->errors());

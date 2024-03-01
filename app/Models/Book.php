@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use http\Env\Request;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -30,19 +31,25 @@ class Book extends Model
 
     public function getRatingAttribute()
     {
-        return round($this->users()->avg('rating'), 2) > 0
+        return round($this->users()->avg('rating'), 1) > 0
             ? round($this->users()
                 ->where('rating', '!=', 0)
-                ->avg('rating'), 2)
+                ->avg('rating'), 1)
             : 0;
     }
 
-    public function getIsSelectedAttribute(): bool
+    public function getIsSelectedAttribute()
     {
+        $user = User::query()->firstWhere('token', request()->bearerToken());
+
+        if (!$user) {
+            return null;
+        }
+
         return boolval($this
             ->users()
             ->withPivot('is_selected')
-            ->firstWhere('user_id', Auth::id())
+            ->firstWhere('user_id', $user->id)
             ?->pivot->is_selected);
     }
 }

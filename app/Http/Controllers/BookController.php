@@ -6,12 +6,31 @@ use App\Models\Author;
 use App\Models\Book;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class BookController extends Controller
 {
+
+    /**
+     * @return JsonResponse
+     */
+    public function getPopular(): JsonResponse
+    {
+        $books = Book::query()
+            ->with('authors')
+            ->with('genres')
+            ->with('users')
+            ->where('is_shown', true)
+            ->get();
+
+        return response()->json([
+            'data' => $books,
+        ]);
+    }
+
     /**
      * @return JsonResponse
      */
@@ -174,6 +193,26 @@ class BookController extends Controller
             $books = $books->get();
         }
 
+        if (isset($request->rating_from)) {
+            if (!$books instanceof Collection) {
+                $books = $books->get();
+            }
+
+            $books = $books->where(function ($item) use ($request) {
+                return $item->rating >= $request->rating_from;
+            })->values();
+
+        }
+
+        if (isset($request->rating_to)) {
+            if (!$books instanceof Collection) {
+                $books = $books->get();
+            }
+
+            $books = $books->filter(function ($item) use ($request) {
+                return $item->rating <= $request->rating_to;
+            })->values();
+        }
 
         return response()->json([
             'data' => $books,
@@ -224,7 +263,6 @@ class BookController extends Controller
             ->load('authors')
             ->load('genres')
             ->load('users');
-
 
         return response()->json([
             'data' => $book,
